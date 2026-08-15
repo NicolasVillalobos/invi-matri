@@ -607,6 +607,23 @@ body {
   color: var(--burgundy);
 }
 .rsvp .btn { margin-top: 2.4rem; }
+/* Plazo para confirmar: tiene que leerse sin competir con el botón, por eso va
+   en la itálica de los títulos y solo la fecha toma el coral de las acciones. */
+.rsvp__deadline {
+  margin: 1.3rem auto 0;
+  max-width: 24ch;
+  font-family: var(--font-title);
+  font-style: italic;
+  font-size: clamp(1rem, 4.2vw, 1.1rem);
+  line-height: 1.5;
+  color: var(--burgundy);
+}
+.rsvp__deadline strong {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--coral);
+  white-space: nowrap;
+}
 
 /* =========================================================
    10. INFORMACIONES
@@ -815,6 +832,18 @@ body {
 
 .rsvp-extra { display: grid; gap: 1.7rem; }
 .rsvp-extra[hidden] { display: none; }
+
+.form__note {
+  /* el gap del form (1.7rem) separa demasiado la nota del botón que califica */
+  margin: 0 0 -1rem;
+  font-family: var(--font-ui);
+  font-size: .85rem;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--burgundy);
+  opacity: .8;
+}
+.form__note strong { font-weight: 600; color: var(--coral); white-space: nowrap; }
 
 .form__status {
   font-family: var(--font-ui);
