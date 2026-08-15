@@ -1,0 +1,940 @@
+/* =========================================================
+   Nicolás y Perla — 12.12.2026
+   Mobile first (base 390px) → tablet 768px → desktop 1024px
+   ========================================================= */
+
+/* ---------- Tokens ---------- */
+:root {
+  --burgundy:        #920B2E;  /* textos y títulos */
+  --burgundy-deep:   #7A0A26;
+  --burgundy-paper:  #832E47;  /* fondo de las hojas burdeo */
+  --coral:           #DD6560;
+  --coral-dark:      #C9524D;
+  --orange:          #F6A455;
+  --cream:           #F8F3F1;
+  --cream-warm:      #FBF7F4;
+  --navy:            #24273B;
+  --sky:             #CBE4F1;
+  --white:           #FFFFFF;
+
+  --font-title: "Playfair Display", "Times New Roman", serif;
+  --font-ui:    "Poppins", system-ui, -apple-system, sans-serif;
+  --font-script:"Ballet", "Playfair Display", cursive;
+
+  --wrap:  clamp(18rem, 88vw, 26rem);
+  --tear:  40px;               /* solape del papel rasgado */
+  --radius-card: 22px;
+  --radius-pill: 999px;
+}
+
+/* ---------- Reset ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  /* Sin esto, la Y del hero y los monogramas del RSVP ensanchan el viewport de
+     layout en móvil y los modales (position:fixed) se van hacia la derecha. */
+  overflow-x: hidden;
+}
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--burgundy);
+  font-family: var(--font-title);
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; display: block; }
+h1, h2, h3, p, ul, dl, dd, figure, fieldset, legend { margin: 0; padding: 0; }
+ul { list-style: none; }
+fieldset { border: 0; min-width: 0; }
+button { font: inherit; color: inherit; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px;
+  padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.wrap { width: var(--wrap); margin-inline: auto; }
+
+/* ---------- Papel rasgado ----------
+   El borde sale de los papeles originales del Figma: mask-tear-*.png son
+   recortes de paper-burgundy-tall.png y paper-cream.png con la rasgadura real.
+   Se usan como máscara en dos capas: la primera dibuja el borde con una altura
+   FIJA (así la fibra no se estira al alargarse la sección) y la segunda es un
+   rectángulo sólido que rellena el resto. */
+:root { --tear-h: calc(var(--tear) * 1.15); }
+
+.torn-bg {
+  position: absolute;
+  top: calc(var(--tear) * -1);
+  bottom: calc(var(--tear) * -1);
+  left: 0;
+  right: 0;
+  z-index: -1;
+  pointer-events: none;
+  -webkit-mask-image: url("../assets/textures/mask-tear-top.png"), linear-gradient(#000, #000);
+  -webkit-mask-size: 100% var(--tear-h), 100% calc(100% - var(--tear-h) + 1px);
+  -webkit-mask-position: top center, bottom center;
+  -webkit-mask-repeat: no-repeat, no-repeat;
+  mask-image: url("../assets/textures/mask-tear-top.png"), linear-gradient(#000, #000);
+  mask-size: 100% var(--tear-h), 100% calc(100% - var(--tear-h) + 1px);
+  mask-position: top center, bottom center;
+  mask-repeat: no-repeat, no-repeat;
+}
+/* Texturas de papel: la capa de color plano baja el contraste del
+   bitmap para que la repetición del tile no se note. */
+/* paper-*-fill.jpg es el interior opaco recortado de paper-burgundy-tall.png y
+   paper-cream.png: usar las hojas enteras dejaba ver sus bordes transparentes
+   como bandas al estirarlas. El borde rasgado lo pone la máscara, no el fondo. */
+.torn-bg--burgundy,
+.info__panel,
+.footer {
+  background-color: var(--burgundy-paper);
+  background-image: url("../assets/textures/paper-burgundy-fill.jpg");
+  background-size: 100% auto;
+  background-repeat: repeat;
+}
+.torn-bg--cream,
+.tear--cream,
+.ubicacion {
+  background-color: var(--cream);
+  background-image: url("../assets/textures/paper-cream-fill.jpg");
+  background-size: 100% auto;
+  background-repeat: repeat;
+}
+.torn-bg--gifts { background: url("../assets/img/gifts-bg.png") center / cover no-repeat; }
+
+/* Trozo de papel de la sección anterior que cae sobre una sección con foto:
+   aquí el borde rasgado es el de abajo. */
+.tear {
+  position: absolute;
+  top: calc(var(--tear) * -1);
+  left: 0;
+  right: 0;
+  height: calc(var(--tear) + var(--tear-h));
+  z-index: 1;
+  pointer-events: none;
+  -webkit-mask-image: url("../assets/textures/mask-tear-bottom.png"), linear-gradient(#000, #000);
+  -webkit-mask-size: 100% var(--tear-h), 100% calc(100% - var(--tear-h) + 1px);
+  -webkit-mask-position: bottom center, top center;
+  -webkit-mask-repeat: no-repeat, no-repeat;
+  mask-image: url("../assets/textures/mask-tear-bottom.png"), linear-gradient(#000, #000);
+  mask-size: 100% var(--tear-h), 100% calc(100% - var(--tear-h) + 1px);
+  mask-position: bottom center, top center;
+  mask-repeat: no-repeat, no-repeat;
+}
+
+/* ---------- Tipografía compartida ---------- */
+.section-title {
+  font-family: var(--font-title);
+  font-weight: 400;
+  font-size: clamp(1.9rem, 8.6vw, 2.5rem);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--burgundy);
+  line-height: 1.1;
+}
+.section-title--light { color: var(--white); }
+
+/* El cuerpo también es papel: las secciones crema comparten esta textura */
+body {
+  background-image: url("../assets/textures/paper-cream-fill.jpg");
+  background-size: 100% auto;
+}
+
+/* Título con inicial manuscrita (Ballet) */
+.script-title {
+  font-family: var(--font-title);
+  font-weight: 400;
+  font-size: clamp(1.7rem, 7.6vw, 2.2rem);
+  letter-spacing: .09em;
+  text-align: center;
+  color: var(--burgundy);
+  line-height: 1.1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.6em;
+}
+.script-title--light { color: var(--white); }
+.script-title__ini {
+  font-family: var(--font-script);
+  font-size: 2.65em;
+  line-height: 0;
+  letter-spacing: 0;
+  margin-right: .06em;
+  transform: translateY(.1em);
+  flex: none;
+}
+.script-title__rest { text-transform: uppercase; }
+
+/* ---------- Botones ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5em;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: .9rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 1rem 2.1rem;
+  min-height: 52px;
+  min-width: min(17rem, 82%);
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: transform .15s ease, background-color .2s ease, box-shadow .2s ease;
+}
+.btn:active { transform: scale(.98); }
+.btn:focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; }
+.btn--coral  { background: var(--coral);   color: var(--white); }
+.btn--coral:hover  { background: var(--coral-dark); }
+.btn--white  { background: var(--white);   color: var(--burgundy); }
+.btn--white:hover  { background: #fff8f5; }
+.btn--orange { background: var(--orange);  color: var(--burgundy); }
+.btn--burgundy { background: var(--burgundy); color: var(--white); }
+.btn--block { width: 100%; }
+.btn[disabled] { opacity: .55; cursor: progress; }
+
+.rings { width: 88px; height: auto; margin: 0 auto; }
+
+/* =========================================================
+   1. PORTADA
+   ========================================================= */
+.hero {
+  position: relative;
+  z-index: 0;
+  min-height: 100svh;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  padding: max(4.5rem, 12svh) 0 calc(2.5rem + var(--tear));
+  isolation: isolate;
+  overflow: hidden;
+}
+.hero__media {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url("../assets/img/hero.png") center / cover no-repeat;
+}
+/* Velo negro al 20%: sube el contraste del texto blanco sobre la foto */
+.hero__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, .2);
+}
+.hero__content { text-align: center; color: var(--white); }
+.hero__eyebrow {
+  font-family: var(--font-title);
+  font-size: clamp(.85rem, 3.6vw, 1.1rem);
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  text-indent: .26em;
+  text-shadow: 0 2px 14px rgba(0,0,0,.28);
+}
+.hero__names {
+  --name-size: clamp(2.8rem, 14.4vw, 5rem);
+  position: relative;
+  margin-top: clamp(2.5rem, 11svh, 6rem);
+  display: grid;
+  justify-items: center;
+  font-weight: 400;
+  text-shadow: 0 2px 20px rgba(0,0,0,.3);
+}
+.hero__name {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-title);
+  font-size: var(--name-size);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  line-height: 2.35;
+}
+/* La Y va detrás de los nombres (z-index 0 contra el 1 de .hero__name).
+   0.945 sale de igualar su alto de tinta al hueco que dejan las dos líneas:
+   hueco = 1.388·F  y  alto de la Y en Ballet = 1.468·F. */
+.hero__amp {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  font-family: var(--font-script);
+  font-size: calc(var(--name-size) * .945);
+  line-height: 0;
+  color: var(--orange);
+  text-shadow: 0 2px 16px rgba(0,0,0,.25);
+}
+.hero__kicker {
+  position: relative;
+  text-align: center;
+  color: var(--white);
+  font-family: var(--font-title);
+  font-size: clamp(.95rem, 4.4vw, 1.2rem);
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  text-indent: .3em;
+  text-shadow: 0 2px 14px rgba(0,0,0,.35);
+}
+
+/* =========================================================
+   2. INVITACIÓN
+   ========================================================= */
+.invitacion {
+  position: relative;
+  z-index: 0;
+  padding: 4.5rem 0 5rem;
+  text-align: center;
+}
+.invitacion__lead {
+  margin-top: 1.4rem;
+  font-size: clamp(.95rem, 4.2vw, 1.15rem);
+  letter-spacing: .05em;
+  line-height: 1.75;
+  text-transform: uppercase;
+  color: var(--white);
+}
+.arch {
+  container-type: inline-size;
+  position: relative;
+  width: min(62%, 15rem);
+  aspect-ratio: 43 / 62;
+  margin: 3rem auto 0;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.arch__media {
+  position: absolute;
+  inset: 0;
+  background: url("../assets/img/arch-flowers.png") center / cover no-repeat;
+}
+/* Los huecos se miden entre la TINTA de cada línea, no entre sus cajas: las tres
+   fuentes tienen métricas muy distintas (Ballet cuelga muchísimo) y un `gap`
+   igual dejaba 37px arriba y −7px abajo. Los márgenes van en cqw, igual que los
+   font-size, así la relación se mantiene a cualquier ancho. */
+.arch__date {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0;
+  color: var(--white);
+  text-shadow: 0 2px 14px rgba(0,0,0,.3);
+}
+/* Las tres líneas se miden contra el ancho del arco (cqw) y están calibradas
+   para ocupar el mismo ancho que "DICIEMBRE". */
+.arch__month {
+  font-family: var(--font-title);
+  font-size: 7.1cqw;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  text-indent: .26em;
+  line-height: 1;
+}
+.arch__day {
+  font-family: var(--font-title);
+  font-size: 53.5cqw;
+  letter-spacing: .07em;
+  text-indent: .07em;
+  line-height: .74;
+  margin-top: -4.1cqw;
+}
+.arch__year {
+  font-family: var(--font-script);
+  font-size: 33.5cqw;
+  letter-spacing: .04em;
+  text-indent: .04em;
+  line-height: .55;
+  margin-top: 16.6cqw;
+}
+
+/* =========================================================
+   3. CUENTA REGRESIVA
+   ========================================================= */
+.countdown {
+  position: relative;
+  z-index: 0;
+  padding: .5rem 0 3.5rem;
+  text-align: center;
+}
+.countdown .rings { margin-bottom: 1.4rem; }
+.countdown__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .4rem;
+  margin-top: 2.2rem;
+}
+.countdown__grid li { display: grid; justify-items: center; gap: .1rem; }
+.countdown__num {
+  font-family: var(--font-title);
+  font-size: clamp(2.1rem, 10vw, 3rem);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--burgundy);
+}
+.countdown__label {
+  font-family: var(--font-title);
+  font-size: clamp(.72rem, 3.2vw, .9rem);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-indent: .14em;
+  color: var(--burgundy);
+}
+
+/* =========================================================
+   4. FOTO TORTA
+   ========================================================= */
+.band-photo {
+  position: relative;
+  z-index: 0;
+  aspect-ratio: 781 / 656;
+}
+.band-photo--cake { background: url("../assets/img/cake.png") center / cover no-repeat; }
+
+/* =========================================================
+   5. UBICACIÓN
+   ========================================================= */
+.ubicacion {
+  position: relative;
+  z-index: 0;
+  padding: 0 0 4.5rem;
+  text-align: center;
+}
+.ubicacion .script-title { padding-top: 6.5rem; }
+
+.carousel { position: relative; margin-top: 1.6rem; }
+.carousel__viewport {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  border-radius: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+.carousel__viewport::-webkit-scrollbar { display: none; }
+/* Sin recorte: las cuatro fotos comparten su proporción original 1069×1271 */
+.carousel__slide {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+}
+.carousel__slide img { width: 100%; height: auto; }
+.carousel__dots {
+  display: flex;
+  justify-content: center;
+  gap: .5rem;
+  margin-top: 1rem;
+}
+.carousel__dot {
+  width: 9px; height: 9px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #C9C2BE;
+  cursor: pointer;
+  transition: background-color .2s ease, transform .2s ease;
+}
+.carousel__dot[aria-selected="true"] { background: var(--coral); transform: scale(1.15); }
+
+/* Flechas: en móvil se pasa deslizando, así que solo aparecen con puntero */
+.carousel__nav { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .carousel__nav {
+    position: absolute;
+    top: calc(50% - 1.4rem);
+    translate: 0 -50%;
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .88);
+    box-shadow: 0 4px 14px rgba(60, 20, 30, .18);
+    cursor: pointer;
+    transition: background-color .2s ease, opacity .2s ease, transform .15s ease;
+  }
+  .carousel__nav::before {
+    content: "";
+    width: .7rem;
+    height: .7rem;
+    border-top: 2px solid var(--burgundy);
+    border-right: 2px solid var(--burgundy);
+  }
+  .carousel__nav--prev { left: .8rem; }
+  .carousel__nav--prev::before { rotate: -135deg; translate: .15rem 0; }
+  .carousel__nav--next { right: .8rem; }
+  .carousel__nav--next::before { rotate: 45deg; translate: -.15rem 0; }
+  .carousel__nav:hover { background: #fff; }
+  .carousel__nav:active { transform: scale(.94); }
+  .carousel__nav:focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; }
+  .carousel__nav[disabled] { opacity: 0; pointer-events: none; }
+}
+
+.ubicacion__place {
+  margin-top: 2.2rem;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: clamp(1.35rem, 6.2vw, 1.8rem);
+  color: var(--burgundy);
+}
+.ubicacion__text {
+  margin-top: .6rem;
+  font-size: clamp(1.05rem, 4.8vw, 1.3rem);
+  line-height: 1.4;
+  color: var(--burgundy);
+}
+.ubicacion__hours {
+  margin-top: 1.4rem;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: clamp(1.05rem, 4.8vw, 1.25rem);
+  color: var(--burgundy);
+}
+.ubicacion .btn { margin-top: 1.6rem; }
+
+/* =========================================================
+   6. DRESS CODE
+   ========================================================= */
+/* Las secciones con foto de fondo centran su tarjeta sobre la imagen.
+   El papel rasgado se come --tear por arriba o por abajo, así que el padding
+   compensa esa diferencia para que el bloque quede ópticamente centrado. */
+.dresscode {
+  position: relative;
+  z-index: 0;
+  background: url("../assets/img/dresscode-bg.png") center / cover no-repeat;
+  display: grid;
+  align-content: center;
+  min-height: 34rem;
+  padding: 6.5rem 0;
+}
+.card {
+  position: relative;
+  z-index: 2;
+  background: var(--white);
+  border-radius: var(--radius-card);
+  padding: 2.4rem 1.6rem 2.2rem;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(60, 20, 30, .16);
+}
+.card__sub {
+  margin-top: .2rem;
+  font-family: var(--font-title);
+  font-size: clamp(1.05rem, 4.8vw, 1.3rem);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--burgundy);
+}
+.card__text {
+  margin-top: 1.2rem;
+  font-size: clamp(1.05rem, 4.8vw, 1.25rem);
+  line-height: 1.4;
+  color: var(--burgundy);
+}
+.card .btn { margin-top: 1.6rem; }
+.palette { width: min(88%, 17rem); margin: 1.4rem auto 0; }
+
+/* =========================================================
+   7. MÚSICA
+   ========================================================= */
+.musica {
+  position: relative;
+  z-index: 0;
+  padding: 4.5rem 0 calc(4.5rem + var(--tear) * 2);
+  text-align: center;
+}
+.musica__text {
+  margin-top: .4rem;
+  font-size: clamp(1.05rem, 4.8vw, 1.3rem);
+  line-height: 1.45;
+  color: var(--white);
+}
+.musica .btn { margin-top: 2rem; }
+
+/* =========================================================
+   8. REGALOS
+   ========================================================= */
+.regalos {
+  position: relative;
+  z-index: 0;
+  display: grid;
+  align-content: center;
+  min-height: 34rem;
+  padding: 5rem 0 calc(5rem + var(--tear) * 2);
+}
+
+/* =========================================================
+   9. CONFIRMACIÓN
+   ========================================================= */
+.rsvp {
+  position: relative;
+  z-index: 0;
+  padding: 5rem 0 5rem;
+  text-align: center;
+  /* clip y no hidden: los monogramas se recortan a lo ancho pero el papel
+     rasgado tiene que poder asomar por arriba */
+  overflow-x: clip;
+}
+.rsvp__monogram {
+  position: absolute;
+  width: 46%;
+  opacity: .9;
+  pointer-events: none;
+  z-index: 0;
+}
+.rsvp__monogram--n { top: 1.5rem;  left: -8%; }
+.rsvp__monogram--p { bottom: 1.5rem; right: -6%; }
+.rsvp .wrap { position: relative; z-index: 1; }
+.rsvp .rings { margin-bottom: 1.6rem; }
+.rsvp__title {
+  font-family: var(--font-title);
+  font-weight: 400;
+  font-size: clamp(1.75rem, 8vw, 2.4rem);
+  line-height: 1.35;
+  color: var(--burgundy);
+}
+.rsvp .btn { margin-top: 2.4rem; }
+
+/* =========================================================
+   10. INFORMACIONES
+   ========================================================= */
+/* El fondo burdeo va en la sección entera: si el aspect-ratio de la foto cae en
+   una fracción de píxel, el hueco se rellena con el mismo color en vez de blanco. */
+.info {
+  position: relative;
+  z-index: 0;
+  background-color: var(--burgundy-paper);
+}
+.info__media {
+  aspect-ratio: 550 / 464;
+  background: url("../assets/img/venue-wide.png") center / cover no-repeat;
+  margin-bottom: -1px;
+}
+.info__panel {
+  padding: 4rem 0 4.5rem;
+  text-align: center;
+}
+.info__text {
+  margin-top: .8rem;
+  font-size: clamp(1.05rem, 4.8vw, 1.25rem);
+  color: var(--white);
+}
+.info .btn { margin-top: 1.8rem; }
+
+.footer {
+  color: rgba(255,255,255,.75);
+  text-align: center;
+  padding: 0 0 2.5rem;
+  font-size: .85rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   MODALES
+   ========================================================= */
+/* inset:0 mide contra el viewport de LAYOUT, que en móvil incluye la franja
+   que tapa la barra del navegador: el panel se salía de la pantalla y quedaba
+   descentrado. dvh mide el viewport visible de verdad. */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* El safe-area también en los lados: con muesca en horizontal el área usable
+     no está centrada respecto al viewport y el panel se veía corrido. */
+  padding: max(1rem, env(safe-area-inset-top))
+           max(1rem, env(safe-area-inset-right))
+           max(1rem, env(safe-area-inset-bottom))
+           max(1rem, env(safe-area-inset-left));
+}
+.modal[hidden] { display: none; }
+.modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(52, 14, 24, .55);
+  backdrop-filter: blur(2px);
+  animation: fade .25s ease both;
+}
+.modal__panel {
+  position: relative;
+  flex: 0 1 auto;
+  width: 100%;
+  max-width: 32rem;
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  background: var(--white);
+  border-radius: 20px;
+  --modal-pad: 1.4rem;
+  padding: 3.2rem var(--modal-pad) 2.2rem;
+  animation: slide-up .3s cubic-bezier(.22,.8,.3,1) both;
+}
+@keyframes fade { from { opacity: 0 } to { opacity: 1 } }
+/* Sin desplazamiento vertical a propósito: con animation-fill-mode: both, el
+   fotograma inicial se aplica antes de arrancar, y si la animación se retrasa
+   (o el navegador la limita) el panel se queda descentrado. Escalar no mueve
+   el centro. */
+@keyframes slide-up { from { scale: .97; opacity: 0 } to { scale: 1; opacity: 1 } }
+
+.modal__close {
+  position: absolute;
+  top: .7rem;
+  right: .7rem;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.modal__close::before,
+.modal__close::after {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 22px; height: 1.5px;
+  background: #B9B0AD;
+  border-radius: 2px;
+}
+.modal__close::before { transform: translate(-50%,-50%) rotate(45deg); }
+.modal__close::after  { transform: translate(-50%,-50%) rotate(-45deg); }
+.modal__close:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+.modal__title {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: clamp(1.5rem, 6.6vw, 2rem);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--burgundy);
+  line-height: 1.2;
+  margin-bottom: 1.4rem;
+}
+.modal__text {
+  font-size: clamp(1.05rem, 4.6vw, 1.2rem);
+  line-height: 1.45;
+  color: var(--burgundy);
+  margin-bottom: 1rem;
+}
+.modal__list { display: grid; gap: 1.1rem; }
+.modal__list li {
+  position: relative;
+  padding-left: 1.1rem;
+  font-size: clamp(1.05rem, 4.6vw, 1.2rem);
+  line-height: 1.35;
+  color: var(--burgundy);
+}
+.modal__list li::before { content: "–"; position: absolute; left: 0; }
+/* El collage de referencias necesita todo el ancho posible para leerse en móvil:
+   se sale del padding del panel hasta los bordes. */
+.modal__figure {
+  margin: 1.6rem calc(var(--modal-pad) * -1) 0;
+  width: calc(100% + var(--modal-pad) * 2);
+  max-width: none;
+}
+
+/* ---------- Formularios ---------- */
+.form { display: grid; gap: 1.7rem; }
+.field { display: grid; gap: .7rem; }
+.field__label {
+  font-family: var(--font-title);
+  font-size: clamp(1.05rem, 4.6vw, 1.2rem);
+  line-height: 1.3;
+  color: var(--burgundy);
+}
+.field__input {
+  width: 100%;
+  font-family: var(--font-title);
+  font-size: 1.05rem;
+  color: var(--burgundy);
+  background: transparent;
+  border: 0;
+  border-bottom: 1.5px solid var(--burgundy);
+  border-radius: 0;
+  padding: .35rem 0 .4rem;
+  min-height: 40px;
+  appearance: none;
+}
+.field__input:focus { outline: none; border-bottom-color: var(--coral); box-shadow: 0 1.5px 0 var(--coral); }
+.field__input[aria-invalid="true"] { border-bottom-color: var(--coral); }
+
+.radios { display: grid; gap: .55rem; }
+.radios--inline { grid-template-columns: repeat(2, 1fr); }
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: .7rem;
+  font-family: var(--font-title);
+  font-size: clamp(1.05rem, 4.6vw, 1.2rem);
+  color: var(--burgundy);
+  cursor: pointer;
+  min-height: 40px;
+}
+.radio input { position: absolute; opacity: 0; width: 0; height: 0; }
+.radio__dot {
+  flex: none;
+  width: 22px; height: 22px;
+  border: 1.5px solid var(--burgundy);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  transition: border-color .15s ease;
+}
+.radio__dot::after {
+  content: "";
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: var(--coral);
+  transform: scale(0);
+  transition: transform .15s ease;
+}
+.radio input:checked + .radio__dot::after { transform: scale(1); }
+.radio input:focus-visible + .radio__dot { outline: 2px solid var(--coral); outline-offset: 3px; }
+
+.rsvp-extra { display: grid; gap: 1.7rem; }
+.rsvp-extra[hidden] { display: none; }
+
+.form__status {
+  font-family: var(--font-ui);
+  font-size: .9rem;
+  line-height: 1.4;
+  color: var(--coral);
+  min-height: 0;
+}
+.form__status:empty { display: none; }
+.form__status--ok { color: #2E7D5B; }
+
+.form--done { text-align: center; }
+
+/* =========================================================
+   TABLET  ≥ 768px
+   ========================================================= */
+@media (min-width: 768px) {
+  :root { --wrap: min(34rem, 76vw); --tear: 56px; }
+
+  .hero__names {
+    --name-size: clamp(4rem, 8vw, 5.6rem);
+    margin-top: clamp(5rem, 20svh, 11rem);
+  }
+
+  .invitacion { padding-top: 6rem; }
+  .arch { width: min(46%, 19rem); }
+
+  .countdown { padding: 3rem 0 calc(3rem + var(--tear)); }
+  .countdown__grid { gap: 1.5rem; }
+
+  .band-photo--cake { aspect-ratio: 16 / 8; }
+
+  .card { padding: 3rem 2.6rem 2.6rem; }
+  .dresscode { min-height: 42rem; padding: 8rem 0; }
+  .musica    { padding: 6rem 0 calc(6rem + var(--tear) * 2); }
+  .regalos   { min-height: 42rem; padding: 6rem 0 calc(6rem + var(--tear) * 2); }
+  .rsvp      { padding: 6.5rem 0 6.5rem; }
+  .rsvp__monogram { width: 32%; }
+  .info__media { aspect-ratio: 16 / 7; }
+
+  .modal {
+    padding: max(2rem, env(safe-area-inset-top))
+             max(2rem, env(safe-area-inset-right))
+             max(2rem, env(safe-area-inset-bottom))
+             max(2rem, env(safe-area-inset-left));
+  }
+  .modal__panel {
+    max-width: 34rem;
+    border-radius: 24px;
+    --modal-pad: 2.6rem;
+    padding: 3.4rem var(--modal-pad) 2.8rem;
+  }
+
+  @keyframes slide-up { from { scale: .98; opacity: 0 } to { scale: 1; opacity: 1 } }
+}
+
+/* =========================================================
+   DESKTOP  ≥ 1024px
+   ========================================================= */
+@media (min-width: 1024px) {
+  :root { --wrap: min(44rem, 62vw); --tear: 68px; }
+
+  .hero { padding-top: max(5rem, 14svh); }
+  .hero__eyebrow { font-size: 1.35rem; }
+  .hero__names { --name-size: clamp(5rem, 6.4vw, 7rem); }
+  .hero__kicker { font-size: 1.3rem; }
+
+  /* Textura burdeo apaisada: la vertical se notaba repetida a lo ancho */
+  .torn-bg--burgundy,
+  .info__panel,
+  .footer { background-image: url("../assets/textures/paper-burgundy-desktop.jpeg"); }
+
+  /* Fotos apaisadas propias de desktop */
+  .hero__media      { background-image: url("../assets/img/hero-desktop.jpeg"); }
+  .band-photo--cake { background-image: url("../assets/img/torta-desktop.jpeg"); }
+  .dresscode        { background-image: url("../assets/img/dresscode-desktop.jpeg"); }
+  .torn-bg--gifts   { background-image: url("../assets/img/gifts-desktop.jpeg"); }
+  .info__media      { background-image: url("../assets/img/venue-wide-desktop.jpeg"); }
+
+  .invitacion { padding-top: 8rem; }
+  .invitacion__lead { max-width: 34rem; margin-inline: auto; }
+  .arch { width: 17rem; margin-top: 3.5rem; }
+
+  /* El papel crema asoma --tear por encima de la sección, así que el padding
+     inferior lo compensa para que el bloque quede centrado en la hoja. */
+  .countdown { padding: 4rem 0 calc(4rem + var(--tear)); }
+  .countdown__grid { max-width: 34rem; margin-inline: auto; gap: 2rem; }
+  .countdown__num { font-size: 3.6rem; }
+  .countdown__label { font-size: 1rem; }
+
+  /* Proporciones de las fotos apaisadas de desktop, para no recortarlas */
+  .band-photo--cake { aspect-ratio: 1543 / 639; }
+  .info__media      { aspect-ratio: 2560 / 1346; }
+  .dresscode        { min-height: 32rem; }
+  .regalos          { min-height: 42rem; }
+
+  /* Ubicación en dos columnas */
+  .ubicacion { padding-bottom: 7rem; }
+  .ubicacion .script-title { padding-top: 7.5rem; }
+  .carousel { max-width: 28rem; margin-inline: auto; }
+  .ubicacion__place { font-size: 2.1rem; }
+
+  .dresscode { padding: 7rem 0; }
+  .card { max-width: 36rem; margin-inline: auto; padding: 3.4rem 3rem 3rem; }
+  .musica  { padding: 7.5rem 0 calc(7.5rem + var(--tear) * 2); }
+  .musica__text { max-width: 36rem; margin-inline: auto; }
+  .regalos { padding: 7rem 0 calc(7rem + var(--tear) * 2); }
+
+  .rsvp { padding: 8rem 0 8rem; }
+  .rsvp__monogram { width: 22%; }
+  .rsvp__monogram--n { left: 4%; top: 3rem; }
+  .rsvp__monogram--p { right: 6%; bottom: 3rem; }
+  .rsvp__title { font-size: 2.9rem; max-width: 30rem; margin-inline: auto; }
+
+  .info__panel { padding: 5.5rem 0 6rem; }
+
+  .modal__panel { max-width: 38rem; }
+}
+
+/* Pantallas muy anchas: el hero no se estira sin control */
+@media (min-width: 1600px) {
+  .hero__media { background-position: center 35%; }
+}
